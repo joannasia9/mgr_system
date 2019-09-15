@@ -1,20 +1,16 @@
-import data.implementation.DatabaseManager
 import java.io.BufferedReader
 
 class FaceClusteringApplication : Application {
     override fun run(addressString: String) {
-        val database = DatabaseManager.getInstance()
-        database.closeConnection()
 
-        val command = "/usr/local/bin/python3 " + file.FilePath.ENCODE_FACES.file
-        val param = " -d " + file.FilePath.SQLITE_DATABASE.file
+        val clusterCommand = "/usr/local/bin/python3 " + file.FilePath.CLUSTER_FACES.file
 
-        print(param)
-        val process = Runtime.getRuntime().exec(command + param)
+        val process = Runtime.getRuntime().exec(clusterCommand)
 
         val allText = process.inputStream.bufferedReader().use(BufferedReader::readText)
         print(allText)
 
         process.waitFor()
+
     }
 }

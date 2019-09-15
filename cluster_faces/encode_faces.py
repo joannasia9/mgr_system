@@ -1,53 +1,82 @@
 # USAGE
-# python encode_faces.py --dataset dataset
+# python encode_faces.py
 
-# import the necessary packages
-from imutils import paths
 import face_recognition
 import pickle
 import cv2
 import os
 import sqlite3
 import numpy as np
-import io
 
-def get_parent_dir(directory):
-	import os
-	return os.path.dirname(directory)
+def create_connection(db_file):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+    except sqlite3.Error as e:
+        print(e)
 
-current_dirs_parent = get_parent_dir(os.getcwd())
+    return conn
 
-database_dir = "%s/database/test_database.db" %current_dirs_parent
 
-print("[INFO] Connecting to SQLite")
-conn = sqlite3.connect(database_dir)
-cursor = conn.cursor()
+def close_connection(conn):
+    if (conn):
+        conn.close()
 
-print("[INFO] quantifying faces...")
-cursor.execute("SELECT frame_image FROM frame WHERE frame_ordered='0'")
-frames = cursor.fetchall()
+def fetch_frames(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT frame_image, frame_id FROM frame WHERE frame_ordered='0'")
+    frames = cursor.fetchall()
 
-if(conn):
-	conn.close()
+    return frames
 
-data = []
-for (i, frame) in enumerate(frames):
-	print("[INFO] processing image {}/{}".format(i + 1, len(frames)))
+def encode(frames):
+    data = []
 
-	image = np.frombuffer(frame[0], dtype=np.uint8)
-	rgb = cv2.imdecode(image, cv2.IMREAD_COLOR)
-	resized = cv2.resize(rgb,(350,350))
+    for frame in frames:
+        image = np.frombuffer(frame[0], dtype=np.uint8)
+        rgb = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        resized = cv2.resize(rgb, (350, 350))
 
-	boxes = [(0,350,350,0)]
-	encodings = face_recognition.face_encodings(resized,boxes)
+        boxes = [(0, 350, 350, 0)]
+        encodings = face_recognition.face_encodings(resized, boxes)
 
-	d = [{"loc": box, "encoding": enc}
-		for (box, enc) in zip(boxes, encodings)]
-	data.extend(d)
+        d = [{"loc": box, "encoding": enc, "id": id} for (box, enc, id) in zip(boxes, encodings, [frame[1]])]
+        data.extend(d)
 
-encodings_path = "%s/cluster_faces/encodings.pickle" %current_dirs_parent
-print("[INFO] serializing encodings...")
+    return data
 
-f = open(encodings_path, "wb")
-f.write(pickle.dumps(data))
-f.close()
+
+def serialize_encodings(data):
+    encodings_path = "%s/cluster_faces/encodings.pickle" % os.getcwd()
+    f = open(encodings_path, "wb")
+    f.write(pickle.dumps(data))
+    f.close()
+
+
+def main():
+    print("[INFO] Connecting to SQLite")
+    database_dir = "%s/database/test_database.db" % os.getcwd()
+    conn = create_connection(database_dir)
+
+    print("[INFO] Quantifying faces...")
+    frames = fetch_frames(conn)
+    close_connection(conn)
+
+    print("[INFO] Encoding %s faces..." %len(frames))
+    data = encode(frames)
+
+    print("[INFO] Serializing encodings...")
+    serialize_encodings(data)
+
+    print("[SUCCESS] Encoding process finished successfully.\n")
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
