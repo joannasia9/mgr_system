@@ -1,6 +1,7 @@
 import camera.implementation.CameraManager
 import data.implementation.DatabaseManager
 import detection.DetectionManager
+import display.Color
 import display.DisplayManager
 import file.FilePath
 import org.opencv.core.Mat
@@ -26,7 +27,6 @@ class EmotionRecognitionApplication : Application {
 
         while (camera.isCapturing() && displayManager.isOpened) {
             if (!camera.mat.empty()) {
-
                 val facesArray = intelligenceModule.detectFaces()
                 for (face in facesArray) {
                     val tmpFace = intelligenceModule.verifyFaceCoordinates(face, camera.mat)
@@ -39,10 +39,14 @@ class EmotionRecognitionApplication : Application {
                         iterator++
 
                         //Display results
-                        displayManager.displayRectangle(camera.mat, face)
+                        displayManager.displayRectangle(camera.mat, face, Color.RED)
                         displayManager.displayLabel(camera.mat, face, predictedEmotion)
+                        displayManager.displayEmoticon(camera.mat, face, predictedEmotion)
+                    } else {
+                        displayManager.displayRectangle(camera.mat, face, Color.GREEN)
                     }
                 }
+
                 displayManager.updateLabel(camera.mat)
             }
         }

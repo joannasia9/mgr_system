@@ -49,7 +49,6 @@ class DatabaseManager : Database {
         } catch (err: SQLException) {
         }
 
-        print(frameId)
         return frameId
     }
 

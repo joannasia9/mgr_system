@@ -11,5 +11,8 @@ enum class FilePath(val file : String) {
     ENCODE_FACES("${FACES_DATA.file}/encode_faces.py"),
     CLUSTER_FACES("${FACES_DATA.file}/cluster_faces.py"),
     CAFFEE_MODEL("${ASSETS.file}/res10_300x300_ssd_iter_140000.caffemodel"),
-    PROTOBUF("${ASSETS.file}/deploy.prototxt.txt")
+    PROTOBUF("${ASSETS.file}/deploy.prototxt.txt"),
+    DEMO("${ASSETS.file}/demo.mp4"),
+    EMOTICON_SAD("${ASSETS.file}/sad.png"),
+    EMOTICON_ANGRY("${ASSETS.file}/angry.png")
 }
